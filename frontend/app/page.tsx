@@ -18,9 +18,10 @@ export default function Home() {
   const handlePlan = async () => {
     if (!goal.trim()) return;
     setTasks([]); setRisks([]); setError(''); setLoading(true); setStatus(''); setSearchResults([]);
-
+    const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL || 'http://localhost:8000';
+    
     try {
-      const response = await fetch('http://localhost:8000/orchestrate-stream', {
+      const response = await fetch(`${API_BASE_URL}/orchestrate-stream`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ goal }),
