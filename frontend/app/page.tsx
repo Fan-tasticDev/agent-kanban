@@ -19,36 +19,73 @@ export default function Home() {
   const [tasks, setTasks] = useState<Task[]>([]);
   const [risks, setRisks] = useState<Risk[]>([]);
   const [loading, setLoading] = useState(false);
+  const [status, setStatus] = useState('');
   const [error, setError] = useState('');
+
+  const getRiskForTask = (taskIndex: number): Risk | undefined => {
+    return risks.find(r => r.step_index === taskIndex);
+  };
 
   const handlePlan = async () => {
     if (!goal.trim()) return;
-    setLoading(true);
+    setTasks([]);
+    setRisks([]);
     setError('');
+    setLoading(true);
+    setStatus('');
+
     try {
-      // 使用编排接口，一次性获取规划和风险分析
-      const res = await fetch('http://localhost:8000/orchestrate', {
+      const response = await fetch('http://localhost:8000/orchestrate-stream', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ goal }),
       });
-      const data = await res.json();
-      if (data.plan) {
-        setTasks(data.plan);
-        setRisks(data.risks || []);
-      } else {
-        setError(data.error || '规划失败');
+
+      if (!response.ok || !response.body) throw new Error('网络错误');
+
+      const reader = response.body.getReader();
+      const decoder = new TextDecoder();
+      let buffer = '';
+
+      while (true) {
+        const { done, value } = await reader.read();
+        if (done) break;
+        buffer += decoder.decode(value, { stream: true });
+
+        const lines = buffer.split('\n');
+        buffer = lines.pop() || '';
+
+        for (const line of lines) {
+          if (line.startsWith('data: ')) {
+            const jsonStr = line.slice(6);
+            try {
+              const event = JSON.parse(jsonStr);
+              switch (event.type) {
+                case 'status':
+                  setStatus(event.data);
+                  break;
+                case 'plan_step':
+                  setTasks(prev => [...prev, event.data]);
+                  break;
+                case 'risk_step':
+                  setRisks(prev => [...prev, event.data]);
+                  break;
+                case 'error':
+                  setError(event.data);
+                  break;
+                case 'done':
+                  setStatus('✅ 分析完成');
+                  break;
+              }
+            } catch (e) {}
+          }
+        }
       }
-    } catch (err) {
-      setError('网络错误，请确认后端已启动');
+    } catch (err: any) {
+      setError(err.message || '请求失败');
     } finally {
       setLoading(false);
     }
-  };
-
-  // 根据 step_index 匹配风险到对应任务
-  const getRiskForTask = (taskIndex: number): Risk | undefined => {
-    return risks.find(r => r.step_index === taskIndex);
   };
 
   return (
@@ -56,7 +93,7 @@ export default function Home() {
       <h1 className="text-2xl font-bold mb-6">🤖 多智能体任务规划看板</h1>
 
       {/* 输入区 */}
-      <div className="flex gap-2 mb-8">
+      <div className="flex gap-2 mb-4">
         <input
           value={goal}
           onChange={(e) => setGoal(e.target.value)}
@@ -75,9 +112,10 @@ export default function Home() {
 
       {error && <div className="text-red-500 mb-4 p-3 bg-red-50 rounded">{error}</div>}
 
-      {loading && (
-        <div className="mb-6 p-4 bg-gray-50 rounded border animate-pulse">
-          <p className="text-sm text-gray-600">🤖 <strong>规划 Agent</strong> 正在拆解任务... 完成后将自动调用 🛡️ <strong>风控 Agent</strong> 分析风险...</p>
+      {/* 状态指示器 */}
+      {status && (
+        <div className={`mb-6 p-3 rounded border ${loading ? 'bg-gray-50 animate-pulse' : 'bg-green-50 border-green-300'}`}>
+          <p className="text-sm font-medium">{status}</p>
         </div>
       )}
 
@@ -86,9 +124,8 @@ export default function Home() {
         {tasks.map((task, idx) => {
           const risk = getRiskForTask(idx);
           return (
-            <div key={idx} className="border rounded-lg p-5 shadow-sm bg-white">
+            <div key={idx} className="border rounded-lg p-5 shadow-sm bg-white transition-all duration-300">
               <div className="flex items-start gap-3">
-                {/* 步骤编号 */}
                 <span className="bg-blue-100 text-blue-700 font-bold rounded-full w-8 h-8 flex items-center justify-center text-sm flex-shrink-0">
                   {idx + 1}
                 </span>
@@ -101,7 +138,6 @@ export default function Home() {
                 </div>
               </div>
 
-              {/* 风险分析卡片 */}
               {risk && (
                 <div className="mt-4 ml-11 border-l-4 border-orange-400 pl-4 py-2 bg-orange-50 rounded-r">
                   <p className="text-sm font-bold text-orange-700 flex items-center gap-1">
