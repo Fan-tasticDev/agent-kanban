@@ -2,17 +2,59 @@
 
 AI 全栈项目：规划 Agent + 风控 Agent 协作，支持工具调用（搜索）与流式交互。
 
-## ✅ 功能
-- 用户输入目标，自动拆解为任务步骤
-- 第二个 Agent 分析风险并给出建议
-- 流式展示 Agent 思考过程（SSE）
-- 规划 Agent 可自主调用搜索工具获取最新信息
+## ✨ 核心亮点
+
+- 🧠 **双 Agent 协作**：规划 Agent 拆解任务，风控 Agent 分析风险，自动串联
+- 🔧 **工具调用**：规划 Agent 可通过 Function Calling 自主调用搜索工具（Tavily）
+- 📡 **流式交互**：SSE 实时推送思考状态、任务卡片和风险卡片
+- 📊 **看板可视化**：任务步骤与风险分析动态展示，过程透明
 
 ## 🛠 技术栈
-- 前端：Next.js (App Router), TypeScript, Tailwind CSS
-- 后端：FastAPI, Python, 智谱 GLM-4-Flash
-- Agent 框架：原生 Function Calling + 工具集成
-- 搜索工具：Tavily Search API（或模拟搜索）
+
+| 层级 | 技术选型 |
+|------|----------|
+| **前端** | Next.js (App Router) · TypeScript · Tailwind CSS |
+| **后端** | Python · FastAPI · SSE · Function Calling |
+| **大模型** | 智谱 GLM-4-Flash |
+| **搜索工具** | Tavily Search API（支持模拟搜索降级） |
+| **部署** | Vercel（前端）· Render（后端） |
+
+## 📂 项目结构
+```text
+agent-kanban/
+├── backend/
+│ ├── main.py # 核心接口: /plan, /orchestrate, /orchestrate-stream
+│ ├── requirements.txt
+│ └── .env
+├── frontend/
+│ ├── app/
+│ │ └── page.tsx # 看板界面与流式处理
+│ └── package.json
+├── .gitignore
+└── README.md
+```
 
 ## 📦 本地运行
-见项目内文档。
+```text
+
+## 🧑‍💻 本地运行
+
+```bash
+git clone https://github.com/Fan-tasticDev/agent-kanban.git
+cd agent-kanban
+
+# 后端
+cd backend
+python -m venv venv && source venv/bin/activate
+pip install -r requirements.txt
+# 创建 .env，填入 ZHIPU_API_KEY 和 TAVILY_API_KEY（可选）
+uvicorn main:app --reload
+
+# 前端
+cd ../frontend
+npm install
+npm run dev
+```
+
+## 在线演示
+[点击体验](https://agent-kanban-ten.vercel.app/)
