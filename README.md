@@ -36,16 +36,14 @@ agent-kanban/
 
 ## 📦 本地运行
 ```text
-
-## 🧑‍💻 本地运行
-
 ```bash
 git clone https://github.com/Fan-tasticDev/agent-kanban.git
 cd agent-kanban
 
 # 后端
 cd backend
-python -m venv venv && source venv/bin/activate
+python -m venv venv 
+source venv/bin/activate   # Windows: venv\Scripts\activate
 pip install -r requirements.txt
 # 创建 .env，填入 ZHIPU_API_KEY 和 TAVILY_API_KEY（可选）
 uvicorn main:app --reload
