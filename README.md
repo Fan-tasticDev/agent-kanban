@@ -56,3 +56,4 @@ npm run dev
 
 ## 在线演示
 [点击体验](https://agent-kanban-ten.vercel.app/)
+[在线演示地址2](https://agent-kanban-d5okaafz.edgeone.cool/)
