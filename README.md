@@ -53,7 +53,11 @@ cd ../frontend
 npm install
 npm run dev
 ```
+## 📸 效果截图
+![效果截图](./frontend/public/demo-png.png)
+
+## 演示视频
+![演示视频](./frontend/public/demo.mp4)
 
 ## 在线演示
 [点击体验](https://agent-kanban-ten.vercel.app/)
-[在线演示地址2](https://agent-kanban-d5okaafz.edgeone.cool/)
